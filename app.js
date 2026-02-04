@@ -30,9 +30,21 @@ const setResult = (message, tone = 'info') => {
 };
 
 const parseRepoInput = (input) => {
-  const trimmed = input.trim().replace(/^https?:\/\//, '');
-  const noDomain = trimmed.replace(/^github\.com\//, '');
-  const parts = noDomain.split('/').filter(Boolean);
+  const trimmed = input.trim();
+  let pathSource = trimmed;
+
+  if (trimmed.includes('github.com')) {
+    try {
+      const url = new URL(trimmed.startsWith('http') ? trimmed : `https://${trimmed}`);
+      if (url.hostname.endsWith('github.com')) {
+        pathSource = url.pathname;
+      }
+    } catch (error) {
+      console.warn('无法解析输入 URL，按路径处理。', error);
+    }
+  }
+
+  const parts = pathSource.replace(/^\/+/, '').split('/').filter(Boolean);
   if (parts.length < 2) {
     throw new Error('请输入完整的仓库路径，例如 owner/repo/path。');
   }
