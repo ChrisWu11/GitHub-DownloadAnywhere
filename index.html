@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub Folder Downloader</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1>GitHub Folder Downloader</h1>
+        <p>
+          Paste a public GitHub file or folder path and download the current directory as a zip.
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="download-form" class="form">
+          <label class="field">
+            <span>File or folder path</span>
+            <input
+              id="repo-path"
+              type="text"
+              placeholder="e.g. ChrisWu11/CanvasBarrage/docs"
+              autocomplete="off"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>Branch or tag (optional)</span>
+            <input id="repo-ref" type="text" placeholder="e.g. main" autocomplete="off" />
+          </label>
+
+          <div class="actions">
+            <button id="download-btn" type="submit">Download</button>
+            <button id="reset-btn" type="button" class="ghost">Reset</button>
+          </div>
+        </form>
+
+        <div class="progress-block" aria-live="polite">
+          <div class="progress-meta">
+            <span id="status-text">Waiting for a GitHub path.</span>
+            <span id="progress-text">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="file-log">
+          <div class="file-log-header">
+            <h3>Download log</h3>
+            <span id="file-count">0 files</span>
+          </div>
+          <ul id="file-list" class="file-list" aria-live="polite"></ul>
+        </div>
+
+        <div class="result" id="result" role="status"></div>
+      </section>
+
+      <section class="tips">
+        <h2>Usage</h2>
+        <ul>
+          <li>Supports file or folder paths, for example <code>https://github.com/ChrisWu11/CanvasBarrage/blob/main/docs/kunkun.gif</code>.</li>
+          <li>Public repositories only. Private repos require a token.</li>
+          <li>Downloads are packaged as a zip file named after the target folder.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Powered by GitHub REST API · JSZip</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
