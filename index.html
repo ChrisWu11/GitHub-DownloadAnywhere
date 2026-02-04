@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GitHub 文件夹下载器</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1>GitHub 文件夹下载器</h1>
+        <p>
+          输入公开仓库的文件或文件夹路径，系统会调用 GitHub API 打包当前目录并下载。
+        </p>
+      </header>
+
+      <section class="card">
+        <form id="download-form" class="form">
+          <label class="field">
+            <span>文件或文件夹路径</span>
+            <input
+              id="repo-path"
+              type="text"
+              placeholder="例如: openai/openai-cookbook/examples"
+              autocomplete="off"
+              required
+            />
+          </label>
+
+          <label class="field">
+            <span>分支或标签 (可选)</span>
+            <input id="repo-ref" type="text" placeholder="例如: main" autocomplete="off" />
+          </label>
+
+          <div class="actions">
+            <button id="download-btn" type="submit">开始下载</button>
+            <button id="reset-btn" type="button" class="ghost">重置</button>
+          </div>
+        </form>
+
+        <div class="progress-block" aria-live="polite">
+          <div class="progress-meta">
+            <span id="status-text">等待输入仓库路径。</span>
+            <span id="progress-text">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+        </div>
+
+        <div class="result" id="result" role="status"></div>
+      </section>
+
+      <section class="tips">
+        <h2>使用说明</h2>
+        <ul>
+          <li>支持文件路径与文件夹路径，例如 <code>owner/repo/path/to/file.txt</code>。</li>
+          <li>仅支持公开仓库，私有仓库需要鉴权 token。</li>
+          <li>下载内容会被打包为 zip 文件，文件名包含仓库与目录信息。</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>Powered by GitHub REST API · JSZip</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
