@@ -174,9 +174,13 @@ const collectFiles = async ({ owner, repo, path, ref }, files = []) => {
   return files;
 };
 
-const createZipName = ({ owner, repo, path }) => {
-  const safePath = path ? path.replace(/[\\/]+/g, '_') : 'root';
-  return `${owner}-${repo}-${safePath}.zip`;
+const createZipName = ({ repo, path }) => {
+  if (!path) {
+    return `${repo}.zip`;
+  }
+  const normalized = path.replace(/\\/g, '/').replace(/\/+$/, '');
+  const lastSegment = normalized.split('/').filter(Boolean).pop() || repo;
+  return `${lastSegment}.zip`;
 };
 
 const downloadZip = async ({ owner, repo, path, ref }) => {
