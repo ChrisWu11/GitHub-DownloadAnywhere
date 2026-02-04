@@ -7,6 +7,8 @@ const progressFill = document.querySelector('#progress-fill');
 const result = document.querySelector('#result');
 const downloadButton = document.querySelector('#download-btn');
 const resetButton = document.querySelector('#reset-btn');
+const fileList = document.querySelector('#file-list');
+const fileCount = document.querySelector('#file-count');
 
 const API_BASE = 'https://api.github.com/repos';
 
@@ -16,6 +18,8 @@ const resetState = () => {
   result.textContent = '';
   result.className = 'result';
   downloadButton.disabled = false;
+  fileList.innerHTML = '';
+  fileCount.textContent = '0 个文件';
 };
 
 const updateProgress = (value) => {
@@ -27,6 +31,38 @@ const updateProgress = (value) => {
 const setResult = (message, tone = 'info') => {
   result.textContent = message;
   result.className = `result ${tone}`;
+};
+
+const updateFileCount = (count) => {
+  fileCount.textContent = `${count} 个文件`;
+};
+
+const renderFileItem = (file) => {
+  const listItem = document.createElement('li');
+  listItem.className = 'file-item';
+
+  const name = document.createElement('span');
+  name.textContent = file.path;
+
+  const status = document.createElement('span');
+  status.className = 'file-status pending';
+  status.textContent = '等待';
+
+  listItem.append(name, status);
+  fileList.appendChild(listItem);
+
+  return status;
+};
+
+const updateFileStatus = (statusNode, state) => {
+  statusNode.className = `file-status ${state}`;
+  if (state === 'success') {
+    statusNode.textContent = '成功';
+  } else if (state === 'error') {
+    statusNode.textContent = '失败';
+  } else {
+    statusNode.textContent = '等待';
+  }
 };
 
 const parseRepoInput = (input) => {
@@ -152,6 +188,9 @@ const downloadZip = async ({ owner, repo, path, ref }) => {
     throw new Error('该路径没有可下载的文件。');
   }
 
+  fileList.innerHTML = '';
+  updateFileCount(files.length);
+
   statusText.textContent = `正在下载 ${files.length} 个文件...`;
   updateProgress(10);
 
@@ -159,13 +198,20 @@ const downloadZip = async ({ owner, repo, path, ref }) => {
   let downloaded = 0;
 
   for (const file of files) {
-    const blob = await fetchWithProgress(file.download_url, () => {});
-    const relativePath = path ? file.path.replace(`${path}/`, '') : file.path;
-    zip.file(relativePath, blob);
-    downloaded += 1;
-    const percent = 10 + (downloaded / files.length) * 60;
-    updateProgress(percent);
-    statusText.textContent = `已下载 ${downloaded}/${files.length} 个文件...`;
+    const statusNode = renderFileItem(file);
+    try {
+      const blob = await fetchWithProgress(file.download_url, () => {});
+      const relativePath = path ? file.path.replace(`${path}/`, '') : file.path;
+      zip.file(relativePath, blob);
+      updateFileStatus(statusNode, 'success');
+      downloaded += 1;
+      const percent = 10 + (downloaded / files.length) * 60;
+      updateProgress(percent);
+      statusText.textContent = `已下载 ${downloaded}/${files.length} 个文件...`;
+    } catch (error) {
+      updateFileStatus(statusNode, 'error');
+      throw error;
+    }
   }
 
   statusText.textContent = '正在打包压缩文件...';
