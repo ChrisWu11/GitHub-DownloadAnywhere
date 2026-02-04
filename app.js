@@ -37,21 +37,24 @@ const parseRepoInput = (input) => {
     throw new Error('请输入完整的仓库路径，例如 owner/repo/path。');
   }
 
-  const [owner, repo, marker, ref, ...pathParts] = parts;
+  const [owner, repo] = parts;
+  const markerIndex = parts.findIndex((part) => part === 'tree' || part === 'blob');
 
-  if (marker === 'tree' || marker === 'blob') {
+  if (markerIndex >= 0) {
+    const ref = parts[markerIndex + 1] || '';
+    const path = parts.slice(markerIndex + 2).join('/');
     return {
       owner,
       repo,
-      path: pathParts.join('/'),
-      ref: ref || '',
+      path,
+      ref,
     };
   }
 
   return {
     owner,
     repo,
-    path: [marker, ref, ...pathParts].filter(Boolean).join('/'),
+    path: parts.slice(2).join('/'),
     ref: '',
   };
 };
