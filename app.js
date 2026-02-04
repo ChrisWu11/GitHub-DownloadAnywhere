@@ -14,12 +14,12 @@ const API_BASE = 'https://api.github.com/repos';
 
 const resetState = () => {
   updateProgress(0);
-  statusText.textContent = '等待输入仓库路径。';
+  statusText.textContent = 'Waiting for a GitHub path.';
   result.textContent = '';
   result.className = 'result';
   downloadButton.disabled = false;
   fileList.innerHTML = '';
-  fileCount.textContent = '0 个文件';
+  fileCount.textContent = '0 files';
 };
 
 const updateProgress = (value) => {
@@ -34,7 +34,7 @@ const setResult = (message, tone = 'info') => {
 };
 
 const updateFileCount = (count) => {
-  fileCount.textContent = `${count} 个文件`;
+  fileCount.textContent = `${count} files`;
 };
 
 const renderFileItem = (file) => {
@@ -46,7 +46,7 @@ const renderFileItem = (file) => {
 
   const status = document.createElement('span');
   status.className = 'file-status pending';
-  status.textContent = '等待';
+  status.textContent = 'Pending';
 
   listItem.append(name, status);
   fileList.appendChild(listItem);
@@ -57,11 +57,11 @@ const renderFileItem = (file) => {
 const updateFileStatus = (statusNode, state) => {
   statusNode.className = `file-status ${state}`;
   if (state === 'success') {
-    statusNode.textContent = '成功';
+    statusNode.textContent = 'Success';
   } else if (state === 'error') {
-    statusNode.textContent = '失败';
+    statusNode.textContent = 'Failed';
   } else {
-    statusNode.textContent = '等待';
+    statusNode.textContent = 'Pending';
   }
 };
 
@@ -76,13 +76,13 @@ const parseRepoInput = (input) => {
         pathSource = url.pathname;
       }
     } catch (error) {
-      console.warn('无法解析输入 URL，按路径处理。', error);
+      console.warn('Unable to parse URL input. Falling back to path parsing.', error);
     }
   }
 
   const parts = pathSource.replace(/^\/+/, '').split('/').filter(Boolean);
   if (parts.length < 2) {
-    throw new Error('请输入完整的仓库路径，例如 owner/repo/path。');
+    throw new Error('Please enter a full repository path, e.g. owner/repo/path.');
   }
 
   const [owner, repo] = parts;
@@ -120,7 +120,7 @@ const fetchJson = async (url) => {
   const response = await fetch(url);
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
-    const message = detail?.message || `请求失败: ${response.status}`;
+    const message = detail?.message || `Request failed: ${response.status}`;
     throw new Error(message);
   }
   return response.json();
@@ -129,7 +129,7 @@ const fetchJson = async (url) => {
 const fetchWithProgress = async (url, onProgress) => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`下载失败: ${response.status}`);
+    throw new Error(`Download failed: ${response.status}`);
   }
   const total = Number(response.headers.get('Content-Length')) || 0;
   if (!response.body || total === 0) {
@@ -168,7 +168,7 @@ const collectFiles = async ({ owner, repo, path, ref }, files = []) => {
   } else if (data.type === 'file') {
     files.push(data);
   } else {
-    throw new Error('无法识别的路径类型。');
+    throw new Error('Unrecognized path type.');
   }
 
   return files;
@@ -184,18 +184,18 @@ const createZipName = ({ repo, path }) => {
 };
 
 const downloadZip = async ({ owner, repo, path, ref }) => {
-  statusText.textContent = '正在获取文件列表...';
+  statusText.textContent = 'Fetching file list...';
   updateProgress(5);
 
   const files = await collectFiles({ owner, repo, path, ref });
   if (!files.length) {
-    throw new Error('该路径没有可下载的文件。');
+    throw new Error('No downloadable files found at this path.');
   }
 
   fileList.innerHTML = '';
   updateFileCount(files.length);
 
-  statusText.textContent = `正在下载 ${files.length} 个文件...`;
+  statusText.textContent = `Downloading ${files.length} files...`;
   updateProgress(10);
 
   const zip = new window.JSZip();
@@ -211,14 +211,14 @@ const downloadZip = async ({ owner, repo, path, ref }) => {
       downloaded += 1;
       const percent = 10 + (downloaded / files.length) * 60;
       updateProgress(percent);
-      statusText.textContent = `已下载 ${downloaded}/${files.length} 个文件...`;
+      statusText.textContent = `Downloaded ${downloaded}/${files.length} files...`;
     } catch (error) {
       updateFileStatus(statusNode, 'error');
       throw error;
     }
   }
 
-  statusText.textContent = '正在打包压缩文件...';
+  statusText.textContent = 'Packaging zip file...';
   const zipBlob = await zip.generateAsync(
     { type: 'blob' },
     (metadata) => {
@@ -228,7 +228,7 @@ const downloadZip = async ({ owner, repo, path, ref }) => {
   );
 
   updateProgress(100);
-  statusText.textContent = '准备下载压缩包...';
+  statusText.textContent = 'Preparing your download...';
 
   const downloadLink = document.createElement('a');
   const url = URL.createObjectURL(zipBlob);
@@ -248,12 +248,12 @@ form.addEventListener('submit', async (event) => {
     const manualRef = repoRefInput.value.trim();
     const ref = manualRef || parsed.ref || '';
     await downloadZip({ owner: parsed.owner, repo: parsed.repo, path: parsed.path, ref });
-    setResult('下载完成，文件已自动保存。', 'success');
+    setResult('Download complete. The zip file has been saved.', 'success');
   } catch (error) {
     console.error(error);
     updateProgress(0);
-    statusText.textContent = '下载失败。';
-    setResult(error.message || '下载过程中出现错误。', 'error');
+    statusText.textContent = 'Download failed.';
+    setResult(error.message || 'An error occurred during download.', 'error');
   } finally {
     downloadButton.disabled = false;
   }
