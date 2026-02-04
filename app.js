@@ -36,11 +36,23 @@ const parseRepoInput = (input) => {
   if (parts.length < 2) {
     throw new Error('请输入完整的仓库路径，例如 owner/repo/path。');
   }
-  const [owner, repo, ...pathParts] = parts;
+
+  const [owner, repo, marker, ref, ...pathParts] = parts;
+
+  if (marker === 'tree' || marker === 'blob') {
+    return {
+      owner,
+      repo,
+      path: pathParts.join('/'),
+      ref: ref || '',
+    };
+  }
+
   return {
     owner,
     repo,
-    path: pathParts.join('/'),
+    path: [marker, ref, ...pathParts].filter(Boolean).join('/'),
+    ref: '',
   };
 };
 
@@ -167,9 +179,10 @@ form.addEventListener('submit', async (event) => {
   downloadButton.disabled = true;
 
   try {
-    const { owner, repo, path } = parseRepoInput(repoPathInput.value);
-    const ref = repoRefInput.value.trim();
-    await downloadZip({ owner, repo, path, ref });
+    const parsed = parseRepoInput(repoPathInput.value);
+    const manualRef = repoRefInput.value.trim();
+    const ref = manualRef || parsed.ref || '';
+    await downloadZip({ owner: parsed.owner, repo: parsed.repo, path: parsed.path, ref });
     setResult('下载完成，文件已自动保存。', 'success');
   } catch (error) {
     console.error(error);
